@@ -38,13 +38,14 @@ class Game:
         self.food_reward = 1
         self.death_reward = -1
         self.place_food()
+        self.done = False
 
     def place_food(self):
         food_x = randint(0, self.dimension-1)
         food_y = randint(0, self.dimension-1)
         while [food_x, food_y] in self.snake.body:
-            food_x = randint(0, self.dimension)
-            food_y = randint(0, self.dimension)
+            food_x = randint(0, self.dimension-1)
+            food_y = randint(0, self.dimension-1)
         self.food = [food_x, food_y]
 
     def reset(self):
@@ -57,14 +58,14 @@ class Game:
         # state is an array the size of the game board
         # empty spaces are -1's, snake body is 0.5, snake head is 1 and food is -0.5
         # these values where chose as if to represent pixel brightness in a greyscale image
-        if self.done:
-            return None
         state =  np.full((self.dimension, self.dimension), -1, dtype=np.float32)
         state[self.food[0]][self.food[1]] = -0.5
-        state[self.snake.body[0][0]][self.snake.body[0][1]] = 1
+        # draw head only if not done
+        if not self.done:
+            state[self.snake.body[0][0]][self.snake.body[0][1]] = 1
         for i in range(1, len(self.snake.body)):
             state[self.snake.body[i][0]][self.snake.body[i][1]] = 0.5
-        return state
+        return state.reshape(10,10,1)
 
     def step(self, action):
         reward = 0
@@ -96,7 +97,7 @@ class Game:
             reward = self.death_reward
 
         # return new state
-        return self.get_state(), reward
+        return self.get_state(), reward, self.done
 
     def render(self):
         if self.done:
